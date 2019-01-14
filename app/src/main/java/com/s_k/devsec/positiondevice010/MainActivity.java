@@ -72,7 +72,30 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                Toast.makeText(MainActivity.this, "Demo1送信済", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Demo2送信済", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        Button btSend = findViewById(R.id.btSend);
+        btSend.setOnClickListener(new View.OnClickListener(){
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+            @Override
+            public void onClick(View view) {
+                String dist = "0";
+                String angle = "0";
+                EditText etDist = findViewById(R.id.etDist);
+                dist = etDist.getText().toString();
+                EditText etAngle = findViewById(R.id.etAngle);
+                angle = etAngle.getText().toString();
+                Object obj = Arrays.asList(dist, angle); // 適当なデータを用意
+                String address = ipAddress; // 受信側端末の実際のアドレスに書き換える
+                int port = Integer.parseInt(portNumber);                // 受信側と揃える
+                try {
+                    UDPObjectTransfer.send(obj, address, port);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Toast.makeText(MainActivity.this, "Demo2送信済", Toast.LENGTH_SHORT).show();
             }
         });
 
