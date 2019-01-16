@@ -1,6 +1,7 @@
 package com.s_k.devsec.positiondevice010;
 
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,104 +12,146 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String ipAddress = "192.168.1.4";
-    private String portNumber = "5000";
+    String ipAddress = "192.168.1.2";
+    String portNumber = "5000";
+
+    String dist;
+    String angle;
+
+    View mButtonClicked;
+
+    Handler mHandler;
+
+    TextView tvDist;
+    TextView tvAngle;
+    EditText etDist;
+    EditText etAngle;
+    Button btDemo1;
+    Button btDemo2;
+    Button btSend;
+    EditText etInput;
+    Button btSetPortNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button btDemo1 = findViewById(R.id.btDemo1);
+        final String TAG="MainActivity.onCreate()";
+
+        mHandler = new Handler();
+
+        tvDist = findViewById(R.id.tvDest);
+        tvAngle = findViewById(R.id.tvAngle);
+        etDist = findViewById(R.id.etDist);
+        etAngle = findViewById(R.id.etAngle);
+        etInput = findViewById(R.id.etIpAddress);
+        etInput.setText(ipAddress);
+
+        btDemo1 = findViewById(R.id.btDemo1);
         btDemo1.setOnClickListener(new View.OnClickListener(){
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View view) {
-                String dest = "30";
-                String angle = "40";
-                TextView tvDist = findViewById(R.id.tvDest);
-                tvDist.setText(dest);
-                TextView tvAngle = findViewById(R.id.tvAngle);
+                Log.d(TAG, "onClick:" + view.getId());
+                dist = "30";
+                angle = "40";
+                tvDist.setText(dist);
                 tvAngle.setText(angle);
-                Object obj = Arrays.asList(dest, angle); // 適当なデータを用意
-                String address = ipAddress; // 受信側端末の実際のアドレスに書き換える
-                int port = Integer.parseInt(portNumber);                // 受信側と揃える
-                try {
-                    UDPObjectTransfer.send(obj, address, port);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                Toast.makeText(MainActivity.this, "Demo1送信済", Toast.LENGTH_SHORT).show();
+                mButtonClicked = view;
+                UDPSenderThread mUDPSender = new UDPSenderThread();
+                mUDPSender.start();
+                btDemo1.setEnabled(false);
             }
         });
 
-        Button btDemo2 = findViewById(R.id.btDemo2);
+        btDemo2 = findViewById(R.id.btDemo2);
         btDemo2.setOnClickListener(new View.OnClickListener(){
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View view) {
-                String dest = "10";
-                String angle = "-50";
-                TextView tvDist = findViewById(R.id.tvDest);
-                tvDist.setText(dest);
-                TextView tvAngle = findViewById(R.id.tvAngle);
+                Log.d(TAG, "onClick:" + view.getId());
+                dist = "10";
+                angle = "-50";
+                tvDist.setText(dist);
                 tvAngle.setText(angle);
-                Object obj = Arrays.asList(dest, angle); // 適当なデータを用意
-                String address = ipAddress; // 受信側端末の実際のアドレスに書き換える
-                int port = Integer.parseInt(portNumber);                // 受信側と揃える
-                try {
-                    UDPObjectTransfer.send(obj, address, port);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                Toast.makeText(MainActivity.this, "Demo2送信済", Toast.LENGTH_SHORT).show();
+                mButtonClicked = view;
+                UDPSenderThread mUDPSender = new UDPSenderThread();
+                mUDPSender.start();
+                btDemo2.setEnabled(false);
             }
         });
 
-        Button btSend = findViewById(R.id.btSend);
+        btSend = findViewById(R.id.btSend);
         btSend.setOnClickListener(new View.OnClickListener(){
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View view) {
-                String dist = "0";
-                String angle = "0";
-                EditText etDist = findViewById(R.id.etDist);
+                Log.d(TAG, "onClick:" + view.getId());
                 dist = etDist.getText().toString();
-                EditText etAngle = findViewById(R.id.etAngle);
                 angle = etAngle.getText().toString();
-                Object obj = Arrays.asList(dist, angle); // 適当なデータを用意
-                String address = ipAddress; // 受信側端末の実際のアドレスに書き換える
-                int port = Integer.parseInt(portNumber);                // 受信側と揃える
-                try {
-                    UDPObjectTransfer.send(obj, address, port);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                Toast.makeText(MainActivity.this, "Demo2送信済", Toast.LENGTH_SHORT).show();
+                mButtonClicked = view;
+                UDPSenderThread mUDPSender = new UDPSenderThread();
+                mUDPSender.start();
+                btSend.setEnabled(false);
             }
         });
 
-        Button btSetPortNumber = findViewById(R.id.btIpSetting);
+        btSetPortNumber = findViewById(R.id.btIpSetting);
         btSetPortNumber.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                EditText input = findViewById(R.id.etIpAddress);
-                String inputStr = input.getText().toString();
-                ipAddress = inputStr;
+                ipAddress = etInput.getText().toString();
                 Toast.makeText(MainActivity.this, ipAddress + " を送信先IPアドレスに設定しました", Toast.LENGTH_SHORT).show();
             }
         });
 
+    }
+
+    class UDPSenderThread extends Thread{
+        private static final String TAG="UDPReceiverThread";
+
+        public UDPSenderThread(){
+            super();
+        }
+
+        @Override
+        public void start() {
+            Log.d(TAG,"start()");
+            super.start();
+        }
+
+
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @Override
+        public void run(){
+            final int button_id = mButtonClicked.getId();
+            Object obj = Arrays.asList(dist, angle); // 適当なデータを用意
+            try {
+                UDPObjectTransfer.send(obj, ipAddress, Integer.parseInt(portNumber));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, "送信済", Toast.LENGTH_SHORT).show();
+                    switch (button_id) {
+                        case R.id.btDemo1:
+                            btDemo1.setEnabled(true);
+                            break;
+                        case R.id.btDemo2:
+                            btDemo2.setEnabled(true);
+                            break;
+                        case R.id.btSend:
+                            btSend.setEnabled(true);
+                            break;
+                    }
+
+                }
+            });
+        }
     }
 }
