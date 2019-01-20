@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000"
     tools:context=".MainActivity">
+
+<android.support.constraint.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#000">
 
     <TextView
         android:id="@+id/textView5"
@@ -56,7 +61,8 @@
         android:layout_marginTop="8dp"
         android:text="DEMO2"
         app:layout_constraintStart_toEndOf="@+id/btDemo1"
-        app:layout_constraintTop_toBottomOf="@+id/tvAngle" />
+        app:layout_constraintTop_toBottomOf="@+id/tvAngle">
+    </Button>
 
     <EditText
         android:id="@+id/etAngle"
@@ -214,4 +220,6 @@
         android:text="Port Setting"
         app:layout_constraintStart_toEndOf="@+id/editText4"
         app:layout_constraintTop_toBottomOf="@+id/btIpSetting" />
+
 </android.support.constraint.ConstraintLayout>
+</ScrollView>

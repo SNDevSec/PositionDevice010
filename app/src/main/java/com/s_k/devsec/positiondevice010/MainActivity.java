@@ -20,8 +20,8 @@ public class MainActivity extends AppCompatActivity {
     String ipAddress = "192.168.1.2";
     String portNumber = "5000";
 
-    String dist;
-    String angle;
+    String dist = "";
+    String angle = "";
 
     View mButtonClicked;
 
@@ -91,11 +91,21 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Log.d(TAG, "onClick:" + view.getId());
                 dist = etDist.getText().toString();
-                angle = etAngle.getText().toString();
-                mButtonClicked = view;
-                UDPSenderThread mUDPSender = new UDPSenderThread();
-                mUDPSender.start();
-                btSend.setEnabled(false);
+                Log.d(TAG,"dist is:"+dist);
+                if(dist.length() != 0){
+                    angle = etAngle.getText().toString();
+                    Log.d(TAG,"angle is:"+angle);
+                    if(angle.length() != 0){
+                        mButtonClicked = view;
+                        UDPSenderThread mUDPSender = new UDPSenderThread();
+                        mUDPSender.start();
+                        btSend.setEnabled(false);
+                    }else {
+                        Toast.makeText(MainActivity.this, "Angle値が入力されていません", Toast.LENGTH_SHORT).show();
+                    }
+                }else {
+                    Toast.makeText(MainActivity.this, "Distance値が入力されていません", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -119,14 +129,13 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void start() {
-            Log.d(TAG,"start()");
             super.start();
         }
-
 
         @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void run(){
+            Log.d(TAG,"In run(): thread start.");
             final int button_id = mButtonClicked.getId();
             Object obj = Arrays.asList(dist, angle); // 適当なデータを用意
             try {
@@ -152,6 +161,8 @@ public class MainActivity extends AppCompatActivity {
 
                 }
             });
+            Log.d(TAG,"In run(): thread end.");
+
         }
     }
 }
