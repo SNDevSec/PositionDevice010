@@ -1,5 +1,8 @@
 package com.s_k.devsec.positiondevice010;
 
+import android.content.Context;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
@@ -17,8 +20,8 @@ import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    String ipAddress = "192.168.1.2";
-    String portNumber = "5000";
+    String naviIpAddress = "192.168.1.1";
+    String naviPortNumber = "5000";
 
     String dist = "";
     String angle = "";
@@ -34,8 +37,10 @@ public class MainActivity extends AppCompatActivity {
     Button btDemo1;
     Button btDemo2;
     Button btSend;
-    EditText etInput;
-    Button btSetPortNumber;
+    Button btIpSetting;
+    Button btPortSetting;
+    EditText etIpAddress;
+    EditText etPortNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,10 +53,17 @@ public class MainActivity extends AppCompatActivity {
 
         tvDist = findViewById(R.id.tvDest);
         tvAngle = findViewById(R.id.tvAngle);
+
+        String ip = getWifiIPAddress(MainActivity.this);
+        TextView tvDeviceIP = findViewById(R.id.tvDeviceIP);
+        tvDeviceIP.setText(ip);
+
         etDist = findViewById(R.id.etDist);
         etAngle = findViewById(R.id.etAngle);
-        etInput = findViewById(R.id.etIpAddress);
-        etInput.setText(ipAddress);
+        etIpAddress = findViewById(R.id.etIpAddress);
+        etIpAddress.setText(naviIpAddress);
+        etPortNumber = findViewById(R.id.etPortNumber);
+        etPortNumber.setText(naviPortNumber);
 
         btDemo1 = findViewById(R.id.btDemo1);
         btDemo1.setOnClickListener(new View.OnClickListener(){
@@ -109,12 +121,33 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btSetPortNumber = findViewById(R.id.btIpSetting);
-        btSetPortNumber.setOnClickListener(new View.OnClickListener(){
+        btIpSetting = findViewById(R.id.btIpSetting);
+        btIpSetting.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-                ipAddress = etInput.getText().toString();
-                Toast.makeText(MainActivity.this, ipAddress + " を送信先IPアドレスに設定しました", Toast.LENGTH_SHORT).show();
+                String getString = etIpAddress.getText().toString();
+                Log.d(TAG,"naviIpAddress is:"+naviIpAddress);
+                if(getString.length() != 0){
+                    naviIpAddress = getString;
+                    Toast.makeText(MainActivity.this, naviIpAddress + " を送信先IPアドレスに設定しました", Toast.LENGTH_SHORT).show();
+                }else {
+                    Toast.makeText(MainActivity.this, "IPアドレスが入力されていません", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        btPortSetting = findViewById(R.id.btPortSetting);
+        btPortSetting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String getString = etPortNumber.getText().toString();
+                Log.d(TAG,"naviIpAddress is:"+naviPortNumber);
+                if(getString.length() != 0){
+                    naviPortNumber = getString;
+                    Toast.makeText(MainActivity.this, naviPortNumber + " を送信先ポート番号に設定しました", Toast.LENGTH_SHORT).show();
+                }else {
+                    Toast.makeText(MainActivity.this, "ポート番号が入力されていません", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -123,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
     class UDPSenderThread extends Thread{
         private static final String TAG="UDPReceiverThread";
 
-        public UDPSenderThread(){
+        private UDPSenderThread(){
             super();
         }
 
@@ -139,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
             final int button_id = mButtonClicked.getId();
             Object obj = Arrays.asList(dist, angle); // 適当なデータを用意
             try {
-                UDPObjectTransfer.send(obj, ipAddress, Integer.parseInt(portNumber));
+                UDPObjectTransfer.send(obj, naviIpAddress, Integer.parseInt(naviPortNumber));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -165,4 +198,15 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
+    private static String getWifiIPAddress(Context context) {
+        WifiManager manager = (WifiManager)context.getSystemService(WIFI_SERVICE);
+        WifiInfo info = manager.getConnectionInfo();
+        int ipAddr = info.getIpAddress();
+        String ipString = String.format("%d.%d.%d.%d",
+                (ipAddr>>0)&0xff, (ipAddr>>8)&0xff, (ipAddr>>16)&0xff, (ipAddr>>24)&0xff);
+        return ipString;
+    }
+
+
 }
