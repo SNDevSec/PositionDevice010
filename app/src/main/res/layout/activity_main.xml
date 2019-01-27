@@ -34,6 +34,79 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="Latitude"
+                        android:textColor="@android:color/background_light" />
+
+                    <TextView
+                        android:id="@+id/tvLatitude"
+                        android:layout_width="130dp"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/background_light"
+                        android:text=""
+                        android:textSize="20sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Longitude"
+                        android:textColor="@android:color/background_light" />
+
+                    <TextView
+                        android:id="@+id/tvLongitude"
+                        android:layout_width="130dp"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/background_light"
+                        android:text=""
+                        android:textSize="20sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btMeasStart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Meas Start" />
+
+                <Button
+                    android:id="@+id/btMeasStop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Meas Stop" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:text="Distance[m]"
                         android:textColor="@android:color/background_light" />
 
@@ -42,7 +115,7 @@
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
                         android:background="@android:color/background_light"
-                        android:text="TextView"
+                        android:text=""
                         android:textSize="20sp" />
 
 
@@ -65,7 +138,7 @@
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
                         android:background="@android:color/background_light"
-                        android:text="TextView"
+                        android:text=""
                         android:textSize="20sp" />
                 </LinearLayout>
             </LinearLayout>

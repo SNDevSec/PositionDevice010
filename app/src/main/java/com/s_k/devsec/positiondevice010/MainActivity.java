@@ -1,11 +1,17 @@
 package com.s_k.devsec.positiondevice010;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +30,10 @@ public class MainActivity extends AppCompatActivity {
     String naviIpAddress = "";
     String naviPortNumber = "5000";
 
+    double latitude = 0; //緯度フィールド
+    double longitude = 0; //経度フィールド
+    boolean isMeasStart = false;
+
     String dist = "";
     String angle = "";
 
@@ -33,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
 
     UDPContSenderThread mUDPCSThread;
 
+    TextView tvLatitude;
+    TextView tvLongitude;
     TextView tvDist;
     TextView tvAngle;
     EditText etDist;
@@ -44,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     Button btSend;
     Button btIpSetting;
     Button btPortSetting;
+    Button btMaesStart;
+    Button btMaesStop;
     EditText etIpAddress;
     EditText etPortNumber;
 
@@ -55,6 +69,18 @@ public class MainActivity extends AppCompatActivity {
         final String TAG="MainActivity.onCreate()";
 
         mHandler = new Handler();
+
+        tvLatitude = findViewById(R.id.tvLatitude);
+        tvLongitude = findViewById(R.id.tvLongitude);
+
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        GPSLocationListner locationListner = new GPSLocationListner();
+        if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION};
+            ActivityCompat.requestPermissions(MainActivity.this, permissions, 1000);
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListner);
 
         tvDist = findViewById(R.id.tvDest);
         tvAngle = findViewById(R.id.tvAngle);
@@ -73,11 +99,33 @@ public class MainActivity extends AppCompatActivity {
         etPortNumber = findViewById(R.id.etPortNumber);
         etPortNumber.setText(naviPortNumber);
 
+        btMaesStart = findViewById(R.id.btMeasStart);
+        btMaesStart.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "onClick:");
+                isMeasStart = true;
+                Toast.makeText(MainActivity.this, "位置情報取得開始", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btMaesStop = findViewById(R.id.btMeasStop);
+        btMaesStop.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "onClick:");
+                isMeasStart = false;
+                tvLatitude.setText("");
+                tvLongitude.setText("");
+                Toast.makeText(MainActivity.this, "位置情報取得停止", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         btDemo1 = findViewById(R.id.btDemo1);
         btDemo1.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick:" + view.getId());
+                Log.d(TAG, "onClick:");
                 dist = "30";
                 angle = "40";
                 tvDist.setText(dist);
@@ -93,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
         btDemo2.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick:" + view.getId());
+                Log.d(TAG, "onClick:");
                 dist = "10";
                 angle = "-50";
                 tvDist.setText(dist);
@@ -109,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
         btContStart.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
+                Log.d(TAG, "onClick:");
                 mUDPCSThread = new UDPContSenderThread();
                 mUDPCSThread.start();
                 btContStart.setEnabled(false);
@@ -122,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
         btContStop.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
+                Log.d(TAG, "onClick:");
                 mUDPCSThread.onStop();
                 btContStop.setEnabled(false);
                 Toast.makeText(MainActivity.this, "連続送信停止", Toast.LENGTH_SHORT).show();
@@ -132,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
         btSend.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick:" + view.getId());
+                Log.d(TAG, "onClick:");
                 dist = etDist.getText().toString();
                 Log.d(TAG,"dist is:"+dist);
                 if(dist.length() != 0){
@@ -156,8 +206,8 @@ public class MainActivity extends AppCompatActivity {
         btIpSetting.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
+                Log.d(TAG, "onClick:");
                 String getString = etIpAddress.getText().toString();
-                Log.d(TAG,"naviIpAddress is:"+naviIpAddress);
                 if(getString.length() != 0){
                     naviIpAddress = getString;
                     Toast.makeText(MainActivity.this, naviIpAddress + " を送信先IPアドレスに設定しました", Toast.LENGTH_SHORT).show();
@@ -171,8 +221,8 @@ public class MainActivity extends AppCompatActivity {
         btPortSetting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG, "onClick:");
                 String getString = etPortNumber.getText().toString();
-                Log.d(TAG,"naviIpAddress is:"+naviPortNumber);
                 if(getString.length() != 0){
                     naviPortNumber = getString;
                     Toast.makeText(MainActivity.this, naviPortNumber + " を送信先ポート番号に設定しました", Toast.LENGTH_SHORT).show();
@@ -181,7 +231,41 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
 
+    private class GPSLocationListner implements LocationListener {
+        @Override
+        public void onLocationChanged(Location location){
+            if(isMeasStart){
+                latitude = location.getLatitude();
+                longitude = location.getLongitude();
+
+                tvLatitude.setText(Double.toString(latitude));
+                tvLongitude.setText(Double.toString(longitude));
+            }
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras){}
+
+        @Override
+        public void onProviderEnabled(String provider){}
+
+        @Override
+        public void onProviderDisabled(String provider){}
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
+        if(requestCode == 1000 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            GPSLocationListner locationlistner = new GPSLocationListner();
+            if(ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+                return;
+            }
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationlistner);
+//            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationlistner);
+        }
     }
 
     class UDPSenderThread extends Thread{
