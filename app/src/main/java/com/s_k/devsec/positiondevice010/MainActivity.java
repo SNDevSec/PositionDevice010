@@ -16,11 +16,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    String naviIpAddress = "192.168.1.1";
+    String naviIpAddress = "";
     String naviPortNumber = "5000";
 
     String dist = "";
@@ -30,12 +31,16 @@ public class MainActivity extends AppCompatActivity {
 
     Handler mHandler;
 
+    UDPContSenderThread mUDPCSThread;
+
     TextView tvDist;
     TextView tvAngle;
     EditText etDist;
     EditText etAngle;
     Button btDemo1;
     Button btDemo2;
+    Button btContStart;
+    Button btContStop;
     Button btSend;
     Button btIpSetting;
     Button btPortSetting;
@@ -54,14 +59,17 @@ public class MainActivity extends AppCompatActivity {
         tvDist = findViewById(R.id.tvDest);
         tvAngle = findViewById(R.id.tvAngle);
 
-        String ip = getWifiIPAddress(MainActivity.this);
+        TextView tvDeviceSSID = findViewById(R.id.tvDeviceSSID);
+        tvDeviceSSID.setText(getWifiSSID(MainActivity.this));
+
+        naviIpAddress = getWifiIPAddress(MainActivity.this);
         TextView tvDeviceIP = findViewById(R.id.tvDeviceIP);
-        tvDeviceIP.setText(ip);
+        tvDeviceIP.setText(naviIpAddress);
 
         etDist = findViewById(R.id.etDist);
         etAngle = findViewById(R.id.etAngle);
         etIpAddress = findViewById(R.id.etIpAddress);
-        etIpAddress.setText(naviIpAddress);
+        etIpAddress.setText(getWifiIPAddress3octet(MainActivity.this));
         etPortNumber = findViewById(R.id.etPortNumber);
         etPortNumber.setText(naviPortNumber);
 
@@ -94,6 +102,29 @@ public class MainActivity extends AppCompatActivity {
                 UDPSenderThread mUDPSender = new UDPSenderThread();
                 mUDPSender.start();
                 btDemo2.setEnabled(false);
+            }
+        });
+
+        btContStart = findViewById(R.id.btContStart);
+        btContStart.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                mUDPCSThread = new UDPContSenderThread();
+                mUDPCSThread.start();
+                btContStart.setEnabled(false);
+                btContStop.setEnabled(true);
+                Toast.makeText(MainActivity.this, "連続送信開始", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btContStop = findViewById(R.id.btContStop);
+        btContStop.setEnabled(false);
+        btContStop.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                mUDPCSThread.onStop();
+                btContStop.setEnabled(false);
+                Toast.makeText(MainActivity.this, "連続送信停止", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -170,9 +201,11 @@ public class MainActivity extends AppCompatActivity {
         public void run(){
             Log.d(TAG,"In run(): thread start.");
             final int button_id = mButtonClicked.getId();
-            Object obj = Arrays.asList(dist, angle); // 適当なデータを用意
+            Map<String, String> map = new HashMap<>(); // 適当なデータを用意
+            map.put("dist", dist);
+            map.put("angle", angle);
             try {
-                UDPObjectTransfer.send(obj, naviIpAddress, Integer.parseInt(naviPortNumber));
+                UDPObjectTransfer.send(map, naviIpAddress, Integer.parseInt(naviPortNumber));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -199,6 +232,80 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    class UDPContSenderThread extends Thread{
+        private static final String TAG="UDPContSenderThread";
+        boolean mIsArive= false;
+
+        private UDPContSenderThread(){
+            super();
+        }
+
+        @Override
+        public void start() {
+            mIsArive= true;
+            Log.d(TAG,"mIsArive status:"+ mIsArive);
+            super.start();
+        }
+
+        public void onStop() {
+            Log.d(TAG,"onStop()");
+            mIsArive= false;
+            Log.d(TAG,"mIsArive status:"+ mIsArive);
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @Override
+        public void run(){
+            Log.d(TAG,"In run(): thread start.");
+            int cnt = -60;
+            boolean reverse = false;
+            try {
+                while(mIsArive){
+                    dist = String.valueOf(cnt);
+                    angle= String.valueOf(cnt);
+                    Map<String, String> map = new HashMap<>(); // 適当なデータを用意
+                    map.put("dist", dist);
+                    map.put("angle", angle);
+                    UDPObjectTransfer.send(map, naviIpAddress, Integer.parseInt(naviPortNumber));
+                    if(!reverse) {
+                        if (cnt != 60) {
+                            cnt += 10;
+                        } else {
+                            reverse = true;
+                            cnt -= 10;
+                        }
+                    }else {
+                        if (cnt != -60) {
+                            cnt -= 10;
+                        } else {
+                            reverse = false;
+                            cnt += 10;
+                        }
+                    }
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            tvDist.setText(dist);
+                            tvAngle.setText(angle);
+                        }
+                    });
+                    Thread.sleep(1000);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    btContStart.setEnabled(true);
+                }
+            });
+            Log.d(TAG,"In run(): thread end.");
+        }
+    }
+
     private static String getWifiIPAddress(Context context) {
         WifiManager manager = (WifiManager)context.getSystemService(WIFI_SERVICE);
         WifiInfo info = manager.getConnectionInfo();
@@ -208,5 +315,19 @@ public class MainActivity extends AppCompatActivity {
         return ipString;
     }
 
+    private static String getWifiIPAddress3octet(Context context) {
+        WifiManager manager = (WifiManager)context.getSystemService(WIFI_SERVICE);
+        WifiInfo info = manager.getConnectionInfo();
+        int ipAddr = info.getIpAddress();
+        String ipString = String.format("%d.%d.%d.",
+                (ipAddr>>0)&0xff, (ipAddr>>8)&0xff, (ipAddr>>16)&0xff);
+        return ipString;
+    }
 
+    private static String getWifiSSID(Context context) {
+        WifiManager manager = (WifiManager)context.getSystemService(WIFI_SERVICE);
+        WifiInfo info = manager.getConnectionInfo();
+        String  ssid = info.getSSID();
+        return ssid;
+    }
 }
