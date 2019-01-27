@@ -13,22 +13,24 @@ import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.List;
+import java.util.Map;
 
 public class UDPObjectTransfer {
 
     /**
      * オブジェクトを送信する。
      *
-     * @param obj     オブジェクト
+     * @param map     オブジェクト
      * @param address 宛先アドレス。192.168.1.255のようにネットワークアドレスを指定するとブロードキャスト送信。
      * @param port    宛先ポート。受信側と揃える。
      * @throws IOException
      */
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public static void send(Object obj, String address, int port) throws IOException {
+    public static void send(Map<String, String> map, String address, int port) throws IOException {
         try (DatagramSocket clientSocket = new DatagramSocket()) {
             InetAddress IPAddress = InetAddress.getByName(address);
-            byte[] sendData = convertToBytes(obj);
+            byte[] sendData = convertToBytes(map);
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
             clientSocket.send(sendPacket);
         }

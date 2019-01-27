@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:background="#000">
+    android:background="#000"
+    android:scrollbars="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,32 +15,65 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/lLayoutDemo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="30dp"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:gravity="top"
-                android:orientation="vertical">
+                android:orientation="horizontal">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Distance[m]"
-                    android:textColor="@android:color/background_light" />
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/tvDest"
-                    android:layout_width="100dp"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/background_light"
-                    android:text="TextView"
-                    android:textSize="20sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Distance[m]"
+                        android:textColor="@android:color/background_light" />
+
+                    <TextView
+                        android:id="@+id/tvDest"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/background_light"
+                        android:text="TextView"
+                        android:textSize="20sp" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Angle[°]"
+                        android:textColor="@android:color/background_light" />
+
+                    <TextView
+                        android:id="@+id/tvAngle"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/background_light"
+                        android:text="TextView"
+                        android:textSize="20sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/btDemo1"
@@ -47,35 +81,25 @@
                     android:layout_height="wrap_content"
                     android:text="DEMO1" />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginLeft="10dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Angle[°]"
-                    android:textColor="@android:color/background_light" />
-
-                <TextView
-                    android:id="@+id/tvAngle"
-                    android:layout_width="100dp"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/background_light"
-                    android:text="TextView"
-                    android:textSize="20sp" />
-
                 <Button
                     android:id="@+id/btDemo2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="DEMO2" />
 
+                <Button
+                    android:id="@+id/btContStart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="C.Start" />
+
+                <Button
+                    android:id="@+id/btContStop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="C.Stop" />
             </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout
@@ -131,6 +155,29 @@
                     android:text="Send" />
 
             </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Device SSID"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:id="@+id/tvDeviceSSID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="@android:color/white"
+                android:textSize="20sp" />
+
         </LinearLayout>
 
         <LinearLayout
