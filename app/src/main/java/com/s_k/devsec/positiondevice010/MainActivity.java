@@ -25,14 +25,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LocationListener {
 
     String naviIpAddress = "";
     String naviPortNumber = "5000";
 
+    LocationManager locationManager;
     double latitude = 0; //緯度フィールド
     double longitude = 0; //経度フィールド
-    boolean isMeasStart = false;
+    boolean isMeasStart = true;
 
     String dist = "";
     String angle = "";
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
     TextView tvLatitude;
     TextView tvLongitude;
+    TextView tvProvider;
     TextView tvDist;
     TextView tvAngle;
     EditText etDist;
@@ -72,15 +74,16 @@ public class MainActivity extends AppCompatActivity {
 
         tvLatitude = findViewById(R.id.tvLatitude);
         tvLongitude = findViewById(R.id.tvLongitude);
+        tvProvider = findViewById(R.id.tvProvider);
 
-        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        GPSLocationListner locationListner = new GPSLocationListner();
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION};
             ActivityCompat.requestPermissions(MainActivity.this, permissions, 1000);
             return;
         }
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListner);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
 
         tvDist = findViewById(R.id.tvDest);
         tvAngle = findViewById(R.id.tvAngle);
@@ -100,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         etPortNumber.setText(naviPortNumber);
 
         btMaesStart = findViewById(R.id.btMeasStart);
+        btMaesStart.setEnabled(false);
         btMaesStart.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -117,6 +121,8 @@ public class MainActivity extends AppCompatActivity {
                 isMeasStart = false;
                 tvLatitude.setText("");
                 tvLongitude.setText("");
+                btMaesStart.setEnabled(true);
+                btMaesStop.setEnabled(false);
                 Toast.makeText(MainActivity.this, "位置情報取得停止", Toast.LENGTH_SHORT).show();
             }
         });
@@ -233,38 +239,59 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private class GPSLocationListner implements LocationListener {
-        @Override
-        public void onLocationChanged(Location location){
-            if(isMeasStart){
-                latitude = location.getLatitude();
-                longitude = location.getLongitude();
+    @Override
+    protected void onPause() {
+        Log.d("MainActivity", "onPause()");
+        super.onPause();
+    }
 
-                tvLatitude.setText(Double.toString(latitude));
-                tvLongitude.setText(Double.toString(longitude));
-            }
+    @Override
+    protected void onRestart() {
+        Log.d("MainActivity", "onRestart()");
+        super.onRestart();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d("MainActivity", "onDestroy()");
+        super.onDestroy();
+        locationManager.removeUpdates(this);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Log.d("MainActivity", "onLocationChanged():" + location.getProvider() + " " + String.valueOf(location.getAccuracy()) + " " + location.getTime());
+        if (isMeasStart) {
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+
+            tvLatitude.setText(Double.toString(latitude));
+            tvLongitude.setText(Double.toString(longitude));
+            tvProvider.setText(location.getProvider());
         }
+    }
 
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras){}
+    @Override
+    public void onProviderDisabled(String provider) {
+    }
 
-        @Override
-        public void onProviderEnabled(String provider){}
+    @Override
+    public void onProviderEnabled(String provider) {
+    }
 
-        @Override
-        public void onProviderDisabled(String provider){}
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
         if(requestCode == 1000 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
             LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-            GPSLocationListner locationlistner = new GPSLocationListner();
             if(ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
                 return;
             }
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationlistner);
-//            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationlistner);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
         }
     }
 
@@ -384,6 +411,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     btContStart.setEnabled(true);
+                    Toast.makeText(MainActivity.this, "連続送信スレッド停止", Toast.LENGTH_SHORT).show();
                 }
             });
             Log.d(TAG,"In run(): thread end.");
